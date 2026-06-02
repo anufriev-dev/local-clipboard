@@ -427,7 +427,7 @@ func getLocalIP() string {
 }
 
 func main() {
-	port := flag.String("port", "8080", "Port to run the server on")
+	port := flag.String("port", "2000", "Port to run the server on")
 	flag.Parse()
 
 	fileStore := newFileStore()

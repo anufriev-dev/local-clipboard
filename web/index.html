@@ -1,12 +1,12 @@
 <!doctype html>
-<html lang="en">
+<html lang="ru">
   <head>
     <meta charset="UTF-8" />
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0"
     />
-    <title>Local Clipboard</title>
+    <title>Домашний буфер обмена</title>
     <link
       rel="stylesheet"
       href="styles.css"
@@ -18,33 +18,15 @@
       class="update-banner"
       style="display: none"
     >
-      <div class="update-content">
-        <span class="update-icon">🔔</span>
-        <span class="update-text">
-          New version <strong id="latestVersion"></strong> available!
-        </span>
-        <button
-          id="downloadUpdate"
-          class="update-btn"
-        >
-          Download
-        </button>
-        <button
-          id="dismissUpdate"
-          class="update-dismiss"
-        >
-          ✕
-        </button>
-      </div>
     </div>
 
     <div class="container">
-      <h1>📋 Local Clipboard</h1>
+      <h1>📋 Домашний буфер обмена</h1>
       <div
         id="status"
         class="status disconnected"
       >
-        Connecting...
+        Подключение...
       </div>
 
       <div
@@ -52,12 +34,12 @@
         class="qr-section"
       >
         <div class="qr-header">
-          <span class="qr-title">📱 Connect Another Device</span>
+          <span class="qr-title">📱 Подключить другое устройство</span>
           <button
             id="qrToggle"
             class="qr-toggle"
           >
-            Show QR Code
+            Показать QR-код
           </button>
         </div>
         <div
@@ -66,11 +48,11 @@
         >
           <img
             src="/qr"
-            alt="QR Code"
+            alt="QR-код"
             class="qr-image"
             loading="eager"
           />
-          <p class="qr-hint">Scan this code with your phone to connect</p>
+          <p class="qr-hint">Отсканируйте этот код для подключения</p>
         </div>
       </div>
 
@@ -82,24 +64,24 @@
           <label
             for="intervalSelect"
             class="auto-clear-label"
-            >Auto-clear:</label
+            >Автоочистка:</label
           >
           <select
             id="intervalSelect"
             class="auto-clear-select"
           >
-            <option value="0">Never</option>
-            <option value="1">1 min</option>
-            <option value="5">5 min</option>
+            <option value="0">Никогда</option>
+            <option value="1">1 минута</option>
+            <option value="5">5 минут</option>
             <option
               value="10"
               selected
             >
-              10 min
+              10 минут
             </option>
-            <option value="30">30 min</option>
-            <option value="60">1 hour</option>
-            <option value="120">2 hours</option>
+            <option value="30">30 минут</option>
+            <option value="60">1 час</option>
+            <option value="120">2 часа</option>
           </select>
         </div>
         <div class="auto-clear-right">
@@ -112,16 +94,16 @@
             id="pauseResumeBtn"
             class="auto-clear-btn pause-resume-btn"
             style="display: none"
-            title="Pause timer"
+            title="Приостановить таймер"
           >
             ⏸
           </button>
           <button
             id="clearNowBtn"
             class="auto-clear-btn clear-now-btn"
-            title="Clear all messages now"
+            title="Очистить все сообщения сейчас"
           >
-            Clear
+            Очистить
           </button>
         </div>
       </div>
@@ -130,14 +112,14 @@
         class="messages"
         id="messages"
       >
-        <div class="empty-state">No messages yet. Start typing!</div>
+        <div class="empty-state">🌱 Поле пустует. Посадите первое сообщение!</div>
       </div>
 
       <div class="input-area">
         <div class="input-row">
           <textarea
             id="messageInput"
-            placeholder="Type your message... (Shift+Enter for new line)"
+            placeholder="Введите сообщение... (Shift+Enter для новой строки)"
             disabled
             autocomplete="off"
             dir="auto"
@@ -176,19 +158,6 @@
     </div>
 
     <footer class="footer">
-      <div class="footer-content">
-        <span class="version">v{{VERSION}}</span>
-        <span class="separator">•</span>
-        <span class="credits">
-          Made with <span class="heart">❤️</span> by
-          <a
-            href="https://github.com/MoKhajavi75/local-clipboard"
-            target="_blank"
-            rel="noopener noreferrer"
-            >MoKhajavi75</a
-          >
-        </span>
-      </div>
     </footer>
 
     <script src="script.js"></script>

@@ -1,7 +1,7 @@
 .PHONY: help run build update vet
 
 # Default port
-PORT ?= 8080
+PORT ?= 2000
 
 # Binary name
 BINARY_NAME=local-clipboard
@@ -26,18 +26,22 @@ run: ## Run the server
 	@-go run main.go -port $(PORT)
 
 build: ## Build for macOS, Linux and Windows
-	@mkdir -p $(BUILD_DIR)
-	@echo "Building v$(VERSION)..."
-	@echo "  macOS (Intel)..."
-	@GOOS=darwin GOARCH=amd64 go build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME)-$(VERSION)-mac-intel main.go
-	@echo "  macOS (Silicon)..."
-	@GOOS=darwin GOARCH=arm64 go build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME)-$(VERSION)-mac-silicon main.go
-	@echo "  Linux (amd64)..."
-	@GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME)-$(VERSION)-linux-amd64 main.go
-	@echo "  Windows (amd64)..."
-	@GOOS=windows GOARCH=amd64 go build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME)-$(VERSION)-windows-amd64.exe main.go
-	@echo ""
-	@echo "Binaries created in ./$(BUILD_DIR)"
+	# @mkdir -p $(BUILD_DIR)
+	# @echo "Building v$(VERSION)..."
+	# @echo "  macOS (Intel)..."
+	# @GOOS=darwin GOARCH=amd64 go build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME)-$(VERSION)-mac-intel main.go
+	# @echo "  macOS (Silicon)..."
+	# @GOOS=darwin GOARCH=arm64 go build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME)-$(VERSION)-mac-silicon main.go
+	# @echo "  Linux (amd64)..."
+	# @GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME)-$(VERSION)-linux-amd64 main.go
+	@echo "  Linux (armv7)..."
+	@GOOS=linux GOARCH=arm GOARM=7 go build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME)-$(VERSION)-linux-armv7 main.go
+	# @echo "  Linux (arm64)..."
+	# @GOOS=linux GOARCH=arm64 go build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME)-$(VERSION)-linux-arm64 main.go
+	# @echo "  Windows (amd64)..."
+	# @GOOS=windows GOARCH=amd64 go build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME)-$(VERSION)-windows-amd64.exe main.go
+	# @echo ""
+	# @echo "Binaries created in ./$(BUILD_DIR)"
 
 update: ## Update dependencies
 	@echo "Updating dependencies..."

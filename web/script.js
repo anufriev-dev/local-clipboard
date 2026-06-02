@@ -24,7 +24,7 @@ function connect() {
   ws = new WebSocket(wsUrl);
 
   ws.onopen = () => {
-    statusDiv.textContent = 'Connected ✅';
+    statusDiv.textContent = 'Подключено ✅';
     statusDiv.className = 'status connected';
     messageInput.disabled = false;
     fileInput.disabled = false;
@@ -33,7 +33,7 @@ function connect() {
   };
 
   ws.onclose = () => {
-    statusDiv.textContent = 'Disconnected. Reconnecting...';
+    statusDiv.textContent = '⚡ Обрыв связи. Переподключение...';
     statusDiv.className = 'status disconnected';
     messageInput.disabled = true;
     sendButton.disabled = true;
@@ -43,7 +43,7 @@ function connect() {
 
   ws.onerror = error => {
     console.error('WebSocket error:', error);
-    statusDiv.textContent = 'Connection error';
+    statusDiv.textContent = 'Ошибка подключения';
     statusDiv.className = 'status disconnected';
   };
 
@@ -59,7 +59,19 @@ function connect() {
     }
     if (data.type === 'clients') {
       connectedCount = data.count;
-      statusDiv.textContent = `Connected ✅ · ${connectedCount} device${connectedCount !== 1 ? 's' : ''}`;
+
+      // Функция склонения
+      const getDeviceWord = (count) => {
+        const mod10 = count % 10;
+        const mod100 = count % 100;
+
+        if (mod100 >= 11 && mod100 <= 14) return 'устройств';
+        if (mod10 === 1) return 'устройство';
+        if (mod10 >= 2 && mod10 <= 4) return 'устройства';
+        return 'устройств';
+      };
+
+      statusDiv.textContent = `Подключено ✅ · ${connectedCount} ${getDeviceWord(connectedCount)}`;
       return;
     }
     if (data.id && ownMessageIds.has(data.id)) {
@@ -96,7 +108,7 @@ function addMessage(text, file, isOwn, messageId, senderIp) {
 
   const headerDiv = document.createElement('div');
   headerDiv.className = 'message-header';
-  headerDiv.textContent = isOwn ? 'You' : senderIp || 'Unknown';
+  headerDiv.textContent = isOwn ? 'Вы' : senderIp || 'Аноним';
   messageDiv.appendChild(headerDiv);
 
   if (text) {
@@ -128,7 +140,7 @@ function addMessage(text, file, isOwn, messageId, senderIp) {
     if (text && (!isMobile() || window.isSecureContext)) {
       const copyBtn = document.createElement('button');
       copyBtn.className = 'action-btn copy-btn';
-      copyBtn.textContent = 'Copy';
+      copyBtn.textContent = 'Копировать';
       copyBtn.onclick = () => copyMessage(text, copyBtn);
       actionsDiv.appendChild(copyBtn);
     }
@@ -137,7 +149,7 @@ function addMessage(text, file, isOwn, messageId, senderIp) {
       const fileId = file.id || messageId;
       const downloadBtn = document.createElement('button');
       downloadBtn.className = 'action-btn download-btn';
-      downloadBtn.textContent = 'Download';
+      downloadBtn.textContent = 'Скачать';
       downloadBtn.onclick = () => downloadFile(fileId, file.name);
       actionsDiv.appendChild(downloadBtn);
     }
@@ -150,7 +162,7 @@ function addMessage(text, file, isOwn, messageId, senderIp) {
 }
 
 function clearAllMessages() {
-  messagesDiv.innerHTML = '<div class="empty-state">No messages yet. Start typing!</div>';
+  messagesDiv.innerHTML = '<div class="empty-state">🌱 Поле пустует. Посадите первое сообщение!</div>';
 }
 
 function applyConfig(config) {
@@ -203,7 +215,7 @@ function updateCountdownDisplay() {
   const s = totalSec % 60;
   const mm = String(m).padStart(2, '0');
   const ss = String(s).padStart(2, '0');
-  countdownDisplay.textContent = h > 0 ? `Next: ${h}h ${mm}:${ss}` : `Next: ${mm}:${ss}`;
+  countdownDisplay.textContent = h > 0 ? `Осталось: ${h}h ${mm}:${ss}` : `Осталось: ${mm}:${ss}`;
 }
 
 function isMobile() {
@@ -213,10 +225,10 @@ function isMobile() {
 function copyMessage(text, button) {
   function onSuccess() {
     button.classList.add('copied');
-    button.textContent = 'Copied';
+    button.textContent = 'Скопировано!';
     setTimeout(() => {
       button.classList.remove('copied');
-      button.textContent = 'Copy';
+      button.textContent = 'Копировать';
     }, 2000);
   }
 
@@ -243,7 +255,7 @@ function fallbackCopy(text, onSuccess) {
     document.execCommand('copy');
     onSuccess();
   } catch (err) {
-    console.error('Copy failed:', err);
+    console.error('Ошибка копирования:', err);
   }
   document.body.removeChild(textarea);
 }
@@ -441,143 +453,6 @@ messageInput.addEventListener('input', function () {
   updateSendButton();
 });
 
-// Update checker functionality
-let currentVersion = null;
-let latestReleaseUrl = null;
-
-async function checkForUpdates() {
-  try {
-    // Fetch current version from server
-    const versionResponse = await fetch('/api/version');
-    const version = await versionResponse.text();
-    currentVersion = version.trim();
-
-    // Update version display
-    const versionSpan = document.querySelector('.version');
-    if (versionSpan) {
-      versionSpan.textContent = `v${currentVersion}`;
-    }
-
-    // Check GitHub for latest release
-    const githubResponse = await fetch(
-      'https://api.github.com/repos/MoKhajavi75/local-clipboard/releases/latest',
-      { cache: 'no-cache' }
-    );
-
-    if (!githubResponse.ok) {
-      console.log('Unable to check for updates');
-      return;
-    }
-
-    const release = await githubResponse.json();
-    const latestVersion = release.tag_name.replace(/^v/, ''); // Remove 'v' prefix if present
-
-    // Compare versions
-    if (compareVersions(latestVersion, currentVersion) > 0) {
-      // Detect user's platform and find matching asset
-      const platformInfo = detectPlatform();
-      const matchingAsset = release.assets.find(asset => {
-        const name = asset.name.toLowerCase();
-        return name.includes(platformInfo.os) && name.includes(platformInfo.arch);
-      });
-
-      if (matchingAsset) {
-        latestReleaseUrl = matchingAsset.browser_download_url;
-      } else {
-        // Fallback to release page if no matching asset found
-        latestReleaseUrl = release.html_url;
-      }
-
-      showUpdateBanner(latestVersion);
-    }
-  } catch (error) {
-    // Silently fail - app works offline
-    console.log('Update check skipped (offline or error):', error.message);
-  }
-}
-
-function detectPlatform() {
-  const userAgent = navigator.userAgent.toLowerCase();
-  const platform = navigator.platform.toLowerCase();
-
-  // Detect OS
-  let os = 'linux';
-  if (platform.includes('win') || userAgent.includes('windows')) {
-    os = 'windows';
-  } else if (platform.includes('mac') || userAgent.includes('mac')) {
-    os = 'darwin';
-  }
-
-  // Detect architecture
-  let arch = 'amd64';
-  if (platform.includes('arm') || userAgent.includes('arm64') || userAgent.includes('aarch64')) {
-    arch = 'arm64';
-  }
-
-  return { os, arch };
-}
-
-function compareVersions(v1, v2) {
-  const parts1 = v1.split('.').map(Number);
-  const parts2 = v2.split('.').map(Number);
-
-  for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
-    const num1 = parts1[i] || 0;
-    const num2 = parts2[i] || 0;
-
-    if (num1 > num2) return 1;
-    if (num1 < num2) return -1;
-  }
-
-  return 0;
-}
-
-function showUpdateBanner(version) {
-  const banner = document.getElementById('updateBanner');
-  const versionSpan = document.getElementById('latestVersion');
-
-  if (banner && versionSpan) {
-    versionSpan.textContent = `v${version}`;
-    banner.style.display = 'block';
-  }
-}
-
-async function downloadUpdate() {
-  if (!latestReleaseUrl) {
-    alert('Unable to download update. Please visit the GitHub releases page.');
-    return;
-  }
-
-  // For binary downloads, simply open the download URL in a new tab
-  // The browser will handle the download automatically
-  window.open(latestReleaseUrl, '_blank');
-
-  // Update button to show success
-  const downloadBtn = document.getElementById('downloadUpdate');
-  const originalText = downloadBtn.textContent;
-  downloadBtn.textContent = '✓ Started!';
-  downloadBtn.disabled = true;
-
-  setTimeout(() => {
-    downloadBtn.textContent = originalText;
-    downloadBtn.disabled = false;
-  }, 2000);
-}
-
-function dismissUpdateBanner() {
-  const banner = document.getElementById('updateBanner');
-  if (banner) {
-    banner.classList.add('hiding');
-    setTimeout(() => {
-      banner.style.display = 'none';
-      banner.classList.remove('hiding');
-    }, 300); // Match animation duration
-  }
-}
-
-// Set up event listeners for update banner
-document.getElementById('downloadUpdate')?.addEventListener('click', downloadUpdate);
-document.getElementById('dismissUpdate')?.addEventListener('click', dismissUpdateBanner);
 
 // QR code toggle functionality
 const qrToggle = document.getElementById('qrToggle');
@@ -592,10 +467,10 @@ if (isMobile()) {
     const isCollapsed = qrContainer.classList.contains('collapsed');
     if (isCollapsed) {
       qrContainer.classList.remove('collapsed');
-      qrToggle.textContent = 'Hide QR Code';
+      qrToggle.textContent = 'Скрыть QR-код';
     } else {
       qrContainer.classList.add('collapsed');
-      qrToggle.textContent = 'Show QR Code';
+      qrToggle.textContent = 'Показать QR-код';
     }
   });
 }
@@ -617,8 +492,5 @@ pauseResumeBtn.addEventListener('click', () => {
 clearNowBtn.addEventListener('click', () => {
   fetch('/clear', { method: 'POST' }).catch(err => console.error('Failed to clear:', err));
 });
-
-// Check for updates on page load
-checkForUpdates();
 
 connect();
