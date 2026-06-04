@@ -428,6 +428,7 @@ func getLocalIP() string {
 
 func main() {
 	port := flag.String("port", "2000", "Port to run the server on")
+	baseURL := flag.String("base-url", "", "Base URL for QR code (e.g., http://buffer.lan)")
 	flag.Parse()
 
 	fileStore := newFileStore()
@@ -464,26 +465,38 @@ func main() {
 				return
 			}
 			w.Write(data)
+		case "/favicon.ico":
+			w.Header().Set("Content-Type", "image/x-icon")
+
+			data, err := webFS.ReadFile("web/assets/favicon.ico")
+			if err != nil {
+				http.NotFound(w, r)
+				return
+			}
+
+			w.Write(data)
 		default:
 			http.NotFound(w, r)
 		}
 	})
 
-	// Version endpoint
-	http.HandleFunc("/api/version", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/plain")
-		w.Write([]byte(Version))
-	})
-
 	// QR code endpoint
 	http.HandleFunc("/qr", func(w http.ResponseWriter, r *http.Request) {
-		localIP := getLocalIP()
-		if localIP == "" {
-			http.Error(w, "Unable to determine local IP", http.StatusInternalServerError)
-			return
+		var url string
+
+		if *baseURL != "" {
+			// Используем домен из флага
+			url = *baseURL
+		} else {
+			// Fallback: определяем IP автоматически
+			localIP := getLocalIP()
+			if localIP == "" {
+				http.Error(w, "Unable to determine local IP", http.StatusInternalServerError)
+				return
+			}
+			url = fmt.Sprintf("http://%s:%s", localIP, *port)
 		}
 
-		url := fmt.Sprintf("http://%s:%s", localIP, *port)
 		png, err := qrcode.Encode(url, qrcode.Medium, 256)
 		if err != nil {
 			http.Error(w, "Error generating QR code", http.StatusInternalServerError)

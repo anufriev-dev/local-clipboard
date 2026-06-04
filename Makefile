@@ -5,6 +5,8 @@ PORT ?= 2000
 
 # Binary name
 BINARY_NAME=local-clipboard
+PORT?=2000
+BASE_URL?=
 
 # Build output directory
 BUILD_DIR=build
@@ -23,7 +25,7 @@ help: ## Show this help message
 
 run: ## Run the server
 	@echo "Starting $(BINARY_NAME) on port $(PORT)..."
-	@-go run main.go -port $(PORT)
+	@-go run main.go -port $(PORT) -base-url $(BASE_URL)
 
 build: ## Build for macOS, Linux and Windows
 	# @mkdir -p $(BUILD_DIR)

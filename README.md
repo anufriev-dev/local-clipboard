@@ -43,11 +43,13 @@ make run
 make run PORT=3000
 ```
 ```bash
+# Ссылка в qr-code и порт обязательно
+make run -base-url="http://buffer.lan" PORT=2000
+```
+```bash
 # Сборка для нескольких платформ
 make build
 ```
-
-
 ### build (сборка)
 
 отредактируйте файл [make](Makefile), в поле `build:` раскомментируйте ту версию, которая подходит для вашей архитектуры процессора, по умолчанию я оставил armv7
@@ -66,6 +68,14 @@ chmod +x ./local-clipboard-*
 # Или с пользовательским портом
 ./local-clipboard-* -port 3000
 ```
+
+### QR-code с вашим доменом
+
+```env
+make run PORT=2000 BASE_URL="http://ваш.домен.arpa"
+```
+
+
 
 ### Разработка в автономном режиме
 
