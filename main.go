@@ -20,6 +20,10 @@ import (
 	"github.com/skip2/go-qrcode"
 )
 
+// 127.0.0.1 or 0.0.0.0
+// https://superuser.com/questions/949428/whats-the-difference-between-127-0-0-1-and-0-0-0-0
+const HOST = "127.0.0.1"
+
 //go:embed web/*
 var webFS embed.FS
 
@@ -656,7 +660,8 @@ func main() {
 		log.Printf("Successfully served file %s (%s, %d bytes)", fileID, file.Name, len(content))
 	})
 
-	addr := "0.0.0.0:" + *port
+	//addr := "0.0.0.0:" + *port
+	addr := HOST + ":" + *port
 
 	// Get local IP address
 	localIP := getLocalIP()
