@@ -20,14 +20,6 @@ import (
 	"github.com/skip2/go-qrcode"
 )
 
-// 127.0.0.1 or 0.0.0.0
-// https://superuser.com/questions/949428/whats-the-difference-between-127-0-0-1-and-0-0-0-0
-const HOST = "127.0.0.1"
-// const protocol = "https"
-
-const SERT_PUB = "path/to/pub.pem"
-const SERT_SEC = "path/to/sec.pem"
-
 //go:embed web/*
 var webFS embed.FS
 
@@ -451,8 +443,8 @@ func main() {
 	baseURL := flag.String("base-url", "", "Base URL for QR code (e.g., http://buffer.lan)")
 
 	// https
-	certFile := flag.String("cert", "./cert/cert.pem", "Path to TLS certificate file")
-	keyFile  := flag.String("key",  "./cert/key.pem",  "Path to TLS private key file")
+	certFile := flag.String("cert", CertPub , "Path to TLS certificate file")
+	keyFile  := flag.String("key",  CertSec,  "Path to TLS private key file")
 
 	flag.Parse()
 
@@ -689,7 +681,7 @@ func main() {
 		log.Printf("Successfully served file %s (%s, %d bytes)", fileID, file.Name, len(content))
 	})
 
-	addr := HOST + ":" + *port
+	addr := Host + ":" + *port
 
     localIP := getLocalIP()
     log.Printf("Server starting on %s", addr)
