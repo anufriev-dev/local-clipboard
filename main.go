@@ -23,6 +23,7 @@ import (
 // 127.0.0.1 or 0.0.0.0
 // https://superuser.com/questions/949428/whats-the-difference-between-127-0-0-1-and-0-0-0-0
 const HOST = "127.0.0.1"
+// const protocol = "https"
 
 //go:embed web/*
 var webFS embed.FS
@@ -430,10 +431,37 @@ func getLocalIP() string {
 	return ""
 }
 
+// tlsAvailable returns true if both cert and key files exist and are readable.
+func tlsAvailable(certFile, keyFile string) bool {
+    if _, err := os.Stat(certFile); err != nil {
+        return false
+    }
+    if _, err := os.Stat(keyFile); err != nil {
+        return false
+    }
+    return true
+}
+
+
 func main() {
+
+
 	port := flag.String("port", "2000", "Port to run the server on")
 	baseURL := flag.String("base-url", "", "Base URL for QR code (e.g., http://buffer.lan)")
+
+	// https
+	certFile := flag.String("cert", "./cert/cert.pem", "Path to TLS certificate file")
+	keyFile  := flag.String("key",  "./cert/key.pem",  "Path to TLS private key file")
+
 	flag.Parse()
+
+	// Автовыбор: если оба файла на месте — HTTPS, иначе HTTP.
+    useTLS := tlsAvailable(*certFile, *keyFile)
+    protocol := "http"
+    if useTLS {
+        protocol = "https"
+    }
+
 
 	fileStore := newFileStore()
 	hub := newHub(fileStore)
@@ -498,7 +526,7 @@ func main() {
 				http.Error(w, "Unable to determine local IP", http.StatusInternalServerError)
 				return
 			}
-			url = fmt.Sprintf("http://%s:%s", localIP, *port)
+			url = fmt.Sprintf("%s://%s:%s", protocol, localIP, *port)
 		}
 
 		png, err := qrcode.Encode(url, qrcode.Medium, 256)
@@ -660,34 +688,41 @@ func main() {
 		log.Printf("Successfully served file %s (%s, %d bytes)", fileID, file.Name, len(content))
 	})
 
-	//addr := "0.0.0.0:" + *port
 	addr := HOST + ":" + *port
 
-	// Get local IP address
-	localIP := getLocalIP()
-	log.Printf("Server starting on %s", addr)
-	log.Printf("Open http://localhost:%s on your laptop", *port)
-	if localIP != "" {
-		log.Printf("Open http://%s:%s on your phone", localIP, *port)
-		log.Printf("Or scan the QR code in the web interface")
-		fmt.Fprintln(os.Stdout)
-		qrterminal.GenerateWithConfig(fmt.Sprintf("http://%s:%s", localIP, *port), qrterminal.Config{
-			Level:          qrterminal.L,
-			Writer:         os.Stdout,
-			HalfBlocks:     true,
-			BlackChar:      "  ",
-			WhiteChar:      "██",
-			BlackWhiteChar: "▄▄",
-			WhiteBlackChar: "▀▀",
-			QuietZone:      1,
-		})
-		fmt.Fprintln(os.Stdout)
-	} else {
-		log.Printf("Open http://<your-laptop-ip>:%s on your phone", *port)
-	}
-	log.Println("Press Ctrl+C to stop the server")
+    localIP := getLocalIP()
+    log.Printf("Server starting on %s", addr)
+    log.Printf("Open %s://localhost:%s on your laptop", protocol, *port)
+    if localIP != "" {
+        url := fmt.Sprintf("%s://%s:%s", protocol, localIP, *port)
+        log.Printf("Open %s on your phone", url)
+        log.Printf("Or scan the QR code in the web interface")
+        fmt.Fprintln(os.Stdout)
+        qrterminal.GenerateWithConfig(url, qrterminal.Config{
+            Level:          qrterminal.L,
+            Writer:         os.Stdout,
+            HalfBlocks:     true,
+            BlackChar:      "  ",
+            WhiteChar:      "██",
+            BlackWhiteChar: "▄▄",
+            WhiteBlackChar: "▀▀",
+            QuietZone:      1,
+        })
+        fmt.Fprintln(os.Stdout)
+    } else {
+        log.Printf("Open %s://<your-laptop-ip>:%s on your phone", protocol, *port)
+    }
+    log.Println("Press Ctrl+C to stop the server")
 
-	if err := http.ListenAndServe(addr, nil); err != nil {
-		log.Fatal("Server failed to start: ", err)
-	}
+    if useTLS {
+        log.Printf("TLS enabled (cert=%s, key=%s)", *certFile, *keyFile)
+        if err := http.ListenAndServeTLS(addr, *certFile, *keyFile, nil); err != nil {
+            log.Fatal("Server failed to start: ", err)
+        }
+    } else {
+        log.Printf("TLS disabled — certificates not found, running plain HTTP")
+        if err := http.ListenAndServe(addr, nil); err != nil {
+            log.Fatal("Server failed to start: ", err)
+        }
+    }
 }
