@@ -25,6 +25,9 @@ import (
 const HOST = "127.0.0.1"
 // const protocol = "https"
 
+const SERT_PUB = "path/to/pub.pem"
+const SERT_SEC = "path/to/sec.pem"
+
 //go:embed web/*
 var webFS embed.FS
 
@@ -143,13 +146,13 @@ func newHub(fileStore *FileStore) *Hub {
 
 // uniqueDeviceCount returns the number of distinct IPs in the clients map.
 // Must be called with h.mu held.
-func uniqueDeviceCount(clients map[*websocket.Conn]string) int {
-	seen := make(map[string]struct{})
-	for _, ip := range clients {
-		seen[ip] = struct{}{}
-	}
-	return len(seen)
-}
+// func uniqueDeviceCount(clients map[*websocket.Conn]string) int {
+// 	seen := make(map[string]struct{})
+// 	for _, ip := range clients {
+// 		seen[ip] = struct{}{}
+// 	}
+// 	return len(seen)
+// }
 
 func (h *Hub) broadcastToAll(msg Message) {
 	h.mu.Lock()
@@ -209,7 +212,7 @@ func (h *Hub) run() {
 			}
 			h.mu.Lock()
 			h.clients[ci.conn] = ci.ip
-			count := uniqueDeviceCount(h.clients)
+			count := len(h.clients) 
 			h.mu.Unlock()
 			log.Printf("Client connected: %s. Total devices: %d", ci.ip, count)
 			h.sendConfigToConn(ci.conn)
@@ -222,7 +225,7 @@ func (h *Hub) run() {
 				delete(h.clients, conn)
 				conn.Close()
 			}
-			count := uniqueDeviceCount(h.clients)
+			count := len(h.clients)
 			h.mu.Unlock()
 			log.Printf("Client disconnected: %s. Total devices: %d", ip, count)
 			h.broadcastToAll(Message{Type: "clients", Count: count})
@@ -380,7 +383,6 @@ func (h *Hub) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 func realIP(r *http.Request) string {
 	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
-		// X-Forwarded-For can be a comma-separated list; the first entry is the client
 		if before, _, ok := strings.Cut(xff, ","); ok {
 			return strings.TrimSpace(before)
 		}
@@ -389,8 +391,7 @@ func realIP(r *http.Request) string {
 	if xri := r.Header.Get("X-Real-IP"); xri != "" {
 		return strings.TrimSpace(xri)
 	}
-	ip, _, _ := net.SplitHostPort(r.RemoteAddr)
-	return ip
+	return r.RemoteAddr
 }
 
 func getLocalIP() string {
